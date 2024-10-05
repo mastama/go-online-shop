@@ -3,9 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"go-online-shop/handler"
 	"log"
+	"net/http"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 )
@@ -44,7 +47,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to open database connection: %v", err)
 	}
-
 	defer db.Close()
 
 	// cek koneksi db
@@ -53,4 +55,35 @@ func main() {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 	fmt.Println("Successfully connected to the database!")
+
+	if _, err = dbMigrate(db); err != nil {
+		fmt.Printf("gagal melakukan migrate database: ")
+		os.Exit(1)
+	}
+
+	// routing
+	r := gin.Default()
+
+	r.GET("/api/v1/products", handler.ListProducts(db))
+	r.GET("/api/v1/products/:id", handler.GetProducts(db))
+	r.POST("/api/v1/checkout")
+
+	r.GET("/api/v1/orders/:id")
+	r.POST("/api/v1/orders/:id/confirm")
+
+	r.POST("/admin/products")
+	r.PUT("/admin/products/:id")
+	r.DELETE("/admin/products/:id")
+
+	// server
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	if err = server.ListenAndServe(); err != nil {
+		fmt.Printf("gagal menjalankan server pada port: %v\n", err)
+		os.Exit(1)
+	}
+
 }
