@@ -6,10 +6,10 @@ import (
 )
 
 type Product struct {
-	ID        string `json:"id"`
+	ID        string `json:"id" binding:"len=0" ` // untuk memastikan field ID tidak diisi
 	Name      string `json:"name"`
 	Price     int64  `json:"price"`
-	IsDeleted *bool  `json:"is_deleted"`
+	IsDeleted *bool  `json:"isDeleted,omitempty"` // omitempty untuk tidak menampilkan field pada response
 }
 
 var (
@@ -55,5 +55,18 @@ func SelectProductById(db *sql.DB, id string) (Product, error) {
 		return Product{}, err
 	}
 	return product, nil
+}
 
+func InsertProduct(db *sql.DB, product Product) error {
+	if db == nil {
+		return ErrDBNil
+	}
+
+	query := `INSERT INTO products (id, name, price) VALUES ($1, $2, $3);`
+	_, err := db.Exec(query, product.ID, product.Name, product.Price)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

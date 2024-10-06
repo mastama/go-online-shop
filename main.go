@@ -71,9 +71,9 @@ func main() {
 	r.GET("/api/v1/orders/:id")
 	r.POST("/api/v1/orders/:id/confirm")
 
-	r.POST("/admin/products")
-	r.PUT("/admin/products/:id")
-	r.DELETE("/admin/products/:id")
+	r.POST("/admin/products", handler.CreateProduct(db))
+	r.PUT("/admin/products/:id", handler.UpdateProduct(db))
+	r.DELETE("/admin/products/:id", handler.DeleteProduct(db))
 
 	// server
 	server := &http.Server{
