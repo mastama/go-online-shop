@@ -70,3 +70,16 @@ func InsertProduct(db *sql.DB, product Product) error {
 
 	return nil
 }
+
+func UpdateProduct(db *sql.DB, product Product) error {
+	if db == nil {
+		return ErrDBNil
+	}
+
+	query := `UPDATE products SET name = $1, price = $2 WHERE id = $3`
+	_, err := db.Exec(query, product.Name, product.Price, product.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
