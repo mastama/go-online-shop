@@ -103,7 +103,7 @@ func CreateProduct(db *sql.DB) gin.HandlerFunc {
 			// Jika terjadi kesalahan saat menyimpan data product ke database, kirim response 500 (server error)
 			log.Printf("Terjadi kesalahan saat membuat data product: %v\n", err)
 			ctx.JSON(500, gin.H{
-				"responseCode":    "ERROR SERVER",
+				"responseCode":    "ERROR",
 				"responseMessage": "Terjadi kesalahan pada server. Gagal menyimpan data produk",
 				"data":            nil,
 			})
@@ -187,6 +187,39 @@ func UpdateProduct(db *sql.DB) gin.HandlerFunc {
 
 func DeleteProduct(db *sql.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		// TODO Implement delete Product
+		// mengambil paramter id dari request
+		id := ctx.Param("id")
+
+		// cek ke database apakah product dengan id tersebut ada atau tidak
+		_, err := model.SelectProductById(db, id)
+		if err != nil {
+			// Jika product tidak ditemukan, kirim response 400 (bad request)
+			log.Printf("Product dengan id %s tidak ditemukan\n", id)
+			ctx.JSON(400, gin.H{
+				"responseCode":    "ERROR",
+				"responseMessage": "Product dengan id tersebut tidak ditemukan",
+				"data":            nil,
+			})
+			return // keluar function jika product tidak ditemukan sebelum menghapus data product tersebut
+		} else {
+			// menghapus data product berdasarkan id yang diberikan
+			if err := model.DeleteProduct(db, id); err != nil {
+				// Jika terjadi kesalahan saat menghapus data product, kirim response 500 (server error)
+				log.Printf("Terjadi kesalahan saat menghapus data produk: %v\n", err)
+				ctx.JSON(500, gin.H{
+					"responseCode":    "ERROR SERVER",
+					"responseMessage": "Terjadi kesalahan pada server. Gagal menghapus data produk",
+					"data":            nil,
+				})
+				return
+			}
+		}
+		// Jika berhasil menghapus produk, kirim response 204 (no content)
+		log.Printf("Berhasil menghapus product dengan ID: %s\n", id)
+		ctx.JSON(200, gin.H{
+			"responseCode":    "SUCCESS",
+			"responseMessage": "Berhasil menghapus product", // Pesan sukses jika produk berhasil dihapus
+			"data":            nil,                          // Data kosong karena produk telah dihapus
+		})
 	}
 }
